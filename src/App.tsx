@@ -26,7 +26,7 @@ import Settings from "./components/Settings";
 import PremiumPage from "./components/PremiumPage";
 import ComingSoon from "./components/ComingSoon";
 import Camera from "./pages/Camera";
-import { home, flash, statsChart, ellipsisHorizontal, cameraOutline } from "ionicons/icons";
+import { home, statsChart, ellipsisHorizontal, cameraOutline } from "ionicons/icons";
 import './App.css';
 
 
@@ -70,7 +70,7 @@ const App: React.FC = () => (
         </IonRouterOutlet>
 
 
-        <IonTabBar slot="bottom" color={"dark"}>
+        <IonTabBar slot="bottom" color={"dark"} >
         <IonTabButton tab="dashboard" href="/home">
           <IonIcon icon={home}  />
           <IonLabel>Home</IonLabel>

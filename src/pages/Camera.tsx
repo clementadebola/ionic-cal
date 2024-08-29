@@ -1,206 +1,133 @@
 import React, { useState, useRef } from 'react';
-import {
-  IonContent,
-  IonHeader,
-  IonPage,
-  IonTitle,
-  IonToolbar,
-  IonFab,
-  IonFabButton,
-  IonIcon,
-  IonGrid,
-  IonRow,
-  IonCol,
-  IonImg,
-  IonActionSheet,
-  IonButton,
-  IonModal,
-  IonButtons,
-  IonSegment,
-  IonSegmentButton,
-  IonLabel,
-} from '@ionic/react';
-import { camera, image, close, trash, cloudUpload } from 'ionicons/icons';
+import { IonPage, IonContent, IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonFab, IonFabButton, IonIcon, IonToast } from '@ionic/react';
+import { camera, sync, settings, cloudUpload } from 'ionicons/icons';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { Filesystem, Directory } from '@capacitor/filesystem';
-import { usePhotoGallery, UserPhoto } from '../hooks/usePhotoGallery';
 import styled from 'styled-components';
 
-const StyledSegment = styled(IonSegment)`
-  --background: #f4f5f8;
+const StyledPage = styled(IonPage)`
+  --ion-background-color: #090b22;
+  --ion-text-color: #ffffff;
 `;
 
-const PhotoGrid = styled(IonGrid)`
-  padding: 0;
-`;
-
-const PhotoImg = styled(IonImg)`
-  border-radius: 8px;
-  margin: 5px;
-`;
-
-const CameraContainer = styled.div`
+const ContentContainer = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
   height: 100%;
 `;
 
-const CameraPreview = styled.video`
-  width: 100%;
-  max-height: 70vh;
-  object-fit: cover;
+const ImageContainer = styled.div`
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  background-color: #000;
 `;
 
-const CameraButtonContainer = styled.div`
+const StyledImage = styled.img`
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+`;
+
+const ControlsContainer = styled.div`
   display: flex;
   justify-content: space-around;
-  width: 100%;
-  padding: 20px;
+  align-items: center;
+  padding: 35px 0;
+  background-color: rgba(0, 0, 0, 0.5);
+`;
+
+const CameraButton = styled(IonFabButton)`
+  --ion-color-primary: #ffffff;
+  --ion-color-primary-contrast: #4a4a4a;
+  width: 70px;
+  height: 70px;
+`;
+
+const SideButton = styled(IonFabButton)`
+  --ion-color-primary: rgba(255, 255, 255, 0.3);
+  --ion-color-primary-contrast: #ffffff;
 `;
 
 const CameraPage: React.FC = () => {
-  const { photos, takePhoto, deletePhoto, addPhoto } = usePhotoGallery();
-  const [photoToDelete, setPhotoToDelete] = useState<UserPhoto>();
-  const [showModal, setShowModal] = useState(false);
-  const [segmentValue, setSegmentValue] = useState('gallery');
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [photoPath, setPhotoPath] = useState<string | undefined>();
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const lastCaptureTime = useRef(0);
 
-  const openCamera = async () => {
+  const captureImage = async (source: CameraSource) => {
+    const now = Date.now();
+    if (now - lastCaptureTime.current < 1000) {
+      setToastMessage('Please wait a moment before capturing another image.');
+      setShowToast(true);
+      return;
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-      setStream(stream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-      setShowModal(true);
-      setSegmentValue('camera');
-    } catch (error) {
-      console.error('Error accessing camera:', error);
-    }
-  };
-
-  const closeCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-    }
-    setStream(null);
-    setShowModal(false);
-  };
-
-  const capturePhoto = async () => {
-    if (videoRef.current) {
-      const canvas = document.createElement('canvas');
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      canvas.getContext('2d')?.drawImage(videoRef.current, 0, 0);
-      const dataUrl = canvas.toDataURL('image/jpeg');
-      await addPhoto(dataUrl);
-      closeCamera();
-    }
-  };
-
-  const uploadFile = async () => {
-    try {
-      const photo = await Camera.getPhoto({
+      const image = await Camera.getPhoto({
+        quality: 90,
+        allowEditing: false,
         resultType: CameraResultType.Uri,
-        source: CameraSource.Photos,
-        quality: 100
+        source: source
       });
-      await addPhoto(photo.webPath!);
+      setPhotoPath(image.webPath);
+      lastCaptureTime.current = now;
     } catch (error) {
-      console.error('Error uploading file:', error);
+      console.error('Error capturing image:', error);
+      setToastMessage('Failed to capture image. Please try again.');
+      setShowToast(true);
     }
+  };
+
+  const takePicture = () => captureImage(CameraSource.Camera);
+  const takeQuickPicture = () => captureImage(CameraSource.Prompt);
+
+  const toggleCamera = () => {
+    // Placeholder for camera toggle functionality
+    setToastMessage('Camera toggled');
+    setShowToast(true);
   };
 
   return (
-    <IonPage>
+    <StyledPage>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>Photo Gallery</IonTitle>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/" />
+          </IonButtons>
+          <IonTitle>Camera</IonTitle>
         </IonToolbar>
-        <StyledSegment value={segmentValue} onIonChange={e => setSegmentValue(e.detail.value!)}>
-          <IonSegmentButton value="gallery">
-            <IonLabel>Gallery</IonLabel>
-          </IonSegmentButton>
-          <IonSegmentButton value="camera">
-            <IonLabel>Camera</IonLabel>
-          </IonSegmentButton>
-        </StyledSegment>
       </IonHeader>
-      <IonContent>
-        {segmentValue === 'gallery' && (
-          <PhotoGrid>
-            <IonRow>
-              {photos.map((photo, index) => (
-                <IonCol size="6" key={index}>
-                  <PhotoImg src={photo.webviewPath} onClick={() => setPhotoToDelete(photo)} />
-                </IonCol>
-              ))}
-            </IonRow>
-          </PhotoGrid>
-        )}
-        {segmentValue === 'camera' && !showModal && (
-          <CameraContainer>
-            <IonButton onClick={openCamera}>Open Camera</IonButton>
-          </CameraContainer>
-        )}
-        <IonFab vertical="bottom" horizontal="center" slot="fixed">
-          <IonFabButton onClick={openCamera}>
-            <IonIcon icon={camera}></IonIcon>
-          </IonFabButton>
-        </IonFab>
-        <IonFab vertical="bottom" horizontal="end" slot="fixed">
-          <IonFabButton onClick={uploadFile}>
-            <IonIcon icon={cloudUpload}></IonIcon>
-          </IonFabButton>
-        </IonFab>
-        <IonActionSheet
-          isOpen={!!photoToDelete}
-          buttons={[{
-            text: 'Delete',
-            role: 'destructive',
-            icon: trash,
-            handler: () => {
-              if (photoToDelete) {
-                deletePhoto(photoToDelete);
-                setPhotoToDelete(undefined);
-              }
-            }
-          }, {
-            text: 'Cancel',
-            icon: close,
-            role: 'cancel'
-          }]}
-          onDidDismiss={() => setPhotoToDelete(undefined)}
-        />
-        <IonModal isOpen={showModal} onDidDismiss={closeCamera}>
-          <IonHeader>
-            <IonToolbar>
-              <IonTitle>Take a Photo</IonTitle>
-              <IonButtons slot="end">
-                <IonButton onClick={closeCamera}>
-                  <IonIcon icon={close} />
-                </IonButton>
-              </IonButtons>
-            </IonToolbar>
-          </IonHeader>
-          <IonContent>
-            <CameraContainer>
-              <CameraPreview ref={videoRef} autoPlay playsInline />
-              <CameraButtonContainer>
-                <IonButton onClick={capturePhoto}>
-                  <IonIcon icon={camera} slot="start" />
-                  Capture
-                </IonButton>
-              </CameraButtonContainer>
-            </CameraContainer>
-          </IonContent>
-        </IonModal>
+      <IonContent fullscreen>
+        <ContentContainer>
+          <ImageContainer>
+            {photoPath ? (
+              <StyledImage src={photoPath} alt="Captured" />
+            ) : (
+              <div style={{ color: '#ffffff', fontSize: '18px' }}>No image captured</div>
+            )}
+          </ImageContainer>
+          <ControlsContainer>
+            <SideButton onClick={takePicture}>
+              <IonIcon icon={cloudUpload} />
+            </SideButton>
+            <CameraButton onClick={takeQuickPicture}>
+              <IonIcon icon={camera} />
+            </CameraButton>
+            <SideButton onClick={toggleCamera}>
+              <IonIcon icon={sync} />
+            </SideButton>
+          </ControlsContainer>
+        </ContentContainer>
       </IonContent>
-    </IonPage>
+      <IonToast
+        isOpen={showToast}
+        onDidDismiss={() => setShowToast(false)}
+        message={toastMessage}
+        duration={2000}
+      />
+    </StyledPage>
   );
 };
 
