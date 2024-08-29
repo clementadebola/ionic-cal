@@ -14,7 +14,7 @@ import {
   addOutline,
   closeOutline,
   backspaceOutline,
-  refreshOutline
+  refreshOutline,
 } from "ionicons/icons";
 import styled from "styled-components";
 
@@ -39,15 +39,13 @@ const StyledTitle = styled(IonTitle)`
 
 const StyledButton = styled(IonButton)`
   --color: #ffffff;
-  --padding-top: 20px;
-  --padding-bottom: 20px;
 `;
 
 const CalculatorGrid = styled.div`
-display: grid;
-grid-template-columns: repeat(4, 1fr);
-gap" 10px;
-padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  padding: 20px;
 `;
 
 const ResultDisplay = styled.div`
@@ -62,25 +60,25 @@ const ResultDisplay = styled.div`
 `;
 
 const OperatorButton = styled(StyledButton)`
----background: %f0ad4e;
---color: #ffffff;
+  --background: #f0ad4e;
+  --color: #ffffff;
 `;
 
 const EqualButton = styled(StyledButton)`
---background: #5cb85c;
---color: #ffffff;
+  --background: #5cb85c;
+  --color: #ffffff;
 `;
 
 const ClearButton = styled(StyledButton)`
---background: #d9534f;
---color: #ffffff;
-
+  --background: #d9534f;
+  --color: #ffffff;
 `;
 
-
 const Calculator: React.FC = () => {
-  const [result, setResult] = useState<string>('0');
-  const [waitingForOperand, setWaitingForOperand] = useState<boolean>(true);
+  const [result, setResult] = useState<string>("0");
+  const [currentOperator, setCurrentOperator] = useState<string | null>(null);
+  const [previousValue, setPreviousValue] = useState<string | null>(null);
+  const [waitingForOperand, setWaitingForOperand] = useState<boolean>(false);
 
   const inputDigit = (digit: string) => {
     if (waitingForOperand) {
@@ -91,44 +89,69 @@ const Calculator: React.FC = () => {
     }
   };
 
-  const inputDecimal = ()=>{
-    if (waitingForOperand){
-      setResult('0.');
+  const inputDecimal = () => {
+    if (waitingForOperand) {
+      setResult("0.");
       setWaitingForOperand(false);
-    } else if(result.indexOf('.') === -1){
-      setResult(result + '.');
+    } else if (!result.includes(".")) {
+      setResult(result + ".");
     }
   };
 
   const clearLastChar = () => {
-    if (result.length === 1){
-      setResult('0');
-      setWaitingForOperand(true);
-    }else {
-      setResult(result.substring(0, result.length - 1));
-    }
-  };
-
-  const clearAll = ()=>{
-    setResult('0');
-    setWaitingForOperand(true);
-  };
-
-
-  const PerformOperation = (nextOperator: string)=> {
-    const inputValue = parseFloat(result);
-
-    if(result.slice(-1) === '.'){
+    if (result.length === 1) {
+      setResult("0");
+    } else {
       setResult(result.slice(0, -1));
     }
+  };
 
-    try{
-      const newResult = eval(result + nextOperator);
-      setResult(Number.isFinite(newResult) ? newResult.toString() : 'Error');
-    } catch (error) {
-      setResult('Error');
+  const clearAll = () => {
+    setResult("0");
+    setCurrentOperator(null);
+    setPreviousValue(null);
+    setWaitingForOperand(false);
+  };
+
+  const performOperation = (nextOperator: string) => {
+    const inputValue = parseFloat(result);
+
+    if (previousValue === null) {
+      setPreviousValue(result);
+    } else if (currentOperator) {
+      const currentValue = parseFloat(previousValue);
+      let newValue = currentValue;
+
+      switch (currentOperator) {
+        case "+":
+          newValue = currentValue + inputValue;
+          break;
+        case "-":
+          newValue = currentValue - inputValue;
+          break;
+        case "*":
+          newValue = currentValue * inputValue;
+          break;
+        case "/":
+          newValue = currentValue / inputValue;
+          break;
+      }
+
+      setResult(String(newValue));
+      setPreviousValue(String(newValue));
     }
+
+    setCurrentOperator(nextOperator);
     setWaitingForOperand(true);
+  };
+
+  const handleEqual = () => {
+    if (currentOperator !== null && previousValue !== null) {
+      performOperation(currentOperator);
+      setCurrentOperator(null);
+      setPreviousValue(null);
+      setWaitingForOperand(true);
+    }
   };
 
   return (
@@ -145,6 +168,7 @@ const Calculator: React.FC = () => {
       <IonContent fullscreen>
         <CalculatorGrid>
           <ResultDisplay>{result}</ResultDisplay>
+
           <StyledButton expand="block" onClick={() => inputDigit("7")}>
             7
           </StyledButton>
@@ -154,38 +178,47 @@ const Calculator: React.FC = () => {
           <StyledButton expand="block" onClick={() => inputDigit("9")}>
             9
           </StyledButton>
-          <OperatorButton expand="block" onClick={() => PerformOperation('+')}>
-          <IonIcon icon={addOutline} />
+          <OperatorButton expand="block" onClick={() => performOperation("+")}>
+            <IonIcon icon={addOutline} />
           </OperatorButton>
 
-          <StyledButton expand="block" onClick={() => inputDigit('4')}>4
+          <StyledButton expand="block" onClick={() => inputDigit("4")}>
+            4
           </StyledButton>
-          <StyledButton expand="block" onClick={() => inputDigit('5')}>5
+          <StyledButton expand="block" onClick={() => inputDigit("5")}>
+            5
           </StyledButton>
-          <StyledButton expand="block" onClick={() => inputDigit('6')}>6
+          <StyledButton expand="block" onClick={() => inputDigit("6")}>
+            6
           </StyledButton>
-          <OperatorButton expand="block" onClick={() => PerformOperation('-')}>
+          <OperatorButton expand="block" onClick={() => performOperation("-")}>
             <IonIcon icon={removeOutline} />
           </OperatorButton>
 
-          <StyledButton expand="block" onClick={() => inputDigit('1')}>4
+          <StyledButton expand="block" onClick={() => inputDigit("1")}>
+            1
           </StyledButton>
-          <StyledButton expand="block" onClick={() => inputDigit('2')}>5
+          <StyledButton expand="block" onClick={() => inputDigit("2")}>
+            2
           </StyledButton>
-          <StyledButton expand="block" onClick={() => inputDigit('3')}>6
+          <StyledButton expand="block" onClick={() => inputDigit("3")}>
+            3
           </StyledButton>
-          <OperatorButton expand="block" onClick={() => PerformOperation('*')}>
+          <OperatorButton expand="block" onClick={() => performOperation("*")}>
             <IonIcon icon={closeOutline} />
           </OperatorButton>
 
-          <StyledButton expand="block" onClick={() => inputDigit('0')}>0
+          <StyledButton expand="block" onClick={() => inputDigit("0")}>
+            0
           </StyledButton>
-          <StyledButton expand="block" onClick={inputDecimal}>.
+          <StyledButton expand="block" onClick={inputDecimal}>
+            .
           </StyledButton>
-          <OperatorButton expand="block" onClick={() => PerformOperation('/')}>
+          <OperatorButton expand="block" onClick={() => performOperation("/")}>
             /
           </OperatorButton>
-          <EqualButton expand="block" onClick={() => PerformOperation('=')}> =
+          <EqualButton expand="block" onClick={handleEqual}>
+            =
           </EqualButton>
 
           <ClearButton expand="block" onClick={clearLastChar}>
@@ -194,7 +227,6 @@ const Calculator: React.FC = () => {
           <ClearButton expand="block" onClick={clearAll}>
             <IonIcon icon={refreshOutline} />
           </ClearButton>
-
         </CalculatorGrid>
       </IonContent>
     </StyledPage>
