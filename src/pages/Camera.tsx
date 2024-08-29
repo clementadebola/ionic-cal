@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { IonPage, IonContent, IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonFab, IonFabButton, IonIcon, IonToast } from '@ionic/react';
-import { camera, sync, settings, cloudUpload } from 'ionicons/icons';
+import { IonPage, IonContent, IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonFabButton, IonIcon, IonToast } from '@ionic/react';
+import { camera, sync, cloudUpload } from 'ionicons/icons';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import styled from 'styled-components';
 

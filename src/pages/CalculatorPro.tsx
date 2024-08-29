@@ -8,7 +8,6 @@ import {
   IonHeader,
   IonToolbar,
   IonList,
-  IonItem,
   IonInput,
   IonCard,
   IonCardContent,
