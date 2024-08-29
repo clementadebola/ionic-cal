@@ -1,5 +1,16 @@
 import React, { useState, useRef } from 'react';
-import { IonPage, IonContent, IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonFabButton, IonIcon, IonToast } from '@ionic/react';
+import {
+  IonPage,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonButtons,
+  IonBackButton,
+  IonTitle,
+  IonFabButton,
+  IonIcon,
+  IonToast,
+} from '@ionic/react';
 import { camera, sync, cloudUpload } from 'ionicons/icons';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import styled from 'styled-components';
@@ -30,6 +41,11 @@ const StyledImage = styled.img`
   object-fit: contain;
 `;
 
+const PlaceholderText = styled.div`
+  color: #ffffff;
+  font-size: 18px;
+`;
+
 const ControlsContainer = styled.div`
   display: flex;
   justify-content: space-around;
@@ -51,16 +67,21 @@ const SideButton = styled(IonFabButton)`
 `;
 
 const CameraPage: React.FC = () => {
-  const [photoPath, setPhotoPath] = useState<string | undefined>();
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
+  const [state, setState] = useState({
+    photoPath: '',
+    showToast: false,
+    toastMessage: '',
+  });
   const lastCaptureTime = useRef(0);
+
+  const showToast = (message: string) => {
+    setState(prevState => ({ ...prevState, showToast: true, toastMessage: message }));
+  };
 
   const captureImage = async (source: CameraSource) => {
     const now = Date.now();
     if (now - lastCaptureTime.current < 1000) {
-      setToastMessage('Please wait a moment before capturing another image.');
-      setShowToast(true);
+      showToast('Please wait a moment before capturing another image.');
       return;
     }
 
@@ -69,14 +90,13 @@ const CameraPage: React.FC = () => {
         quality: 90,
         allowEditing: false,
         resultType: CameraResultType.Uri,
-        source: source
+        source: source,
       });
-      setPhotoPath(image.webPath);
+      setState(prevState => ({ ...prevState, photoPath: image.webPath || '' }));
       lastCaptureTime.current = now;
     } catch (error) {
       console.error('Error capturing image:', error);
-      setToastMessage('Failed to capture image. Please try again.');
-      setShowToast(true);
+      showToast('Failed to capture image. Please try again.');
     }
   };
 
@@ -84,10 +104,10 @@ const CameraPage: React.FC = () => {
   const takeQuickPicture = () => captureImage(CameraSource.Prompt);
 
   const toggleCamera = () => {
-    // Placeholder for camera toggle functionality
-    setToastMessage('Camera toggled');
-    setShowToast(true);
+    showToast('Camera toggled');
   };
+
+  const { photoPath, showToast: isToastVisible, toastMessage } = state;
 
   return (
     <StyledPage>
@@ -105,7 +125,7 @@ const CameraPage: React.FC = () => {
             {photoPath ? (
               <StyledImage src={photoPath} alt="Captured" />
             ) : (
-              <div style={{ color: '#ffffff', fontSize: '18px' }}>No image captured</div>
+              <PlaceholderText>No image captured</PlaceholderText>
             )}
           </ImageContainer>
           <ControlsContainer>
@@ -122,8 +142,8 @@ const CameraPage: React.FC = () => {
         </ContentContainer>
       </IonContent>
       <IonToast
-        isOpen={showToast}
-        onDidDismiss={() => setShowToast(false)}
+        isOpen={isToastVisible}
+        onDidDismiss={() => setState(prevState => ({ ...prevState, showToast: false }))}
         message={toastMessage}
         duration={2000}
       />

@@ -75,9 +75,9 @@ const App: React.FC = () => (
           <IonIcon icon={home}  />
           <IonLabel>Home</IonLabel>
         </IonTabButton>
-        <IonTabButton tab="Camera" href="/camera">
+        <IonTabButton tab="Camera" href="/">
           <IonIcon icon={cameraOutline} />
-          <IonLabel>Ai Camera</IonLabel>
+          <IonLabel>Ai</IonLabel>
         </IonTabButton>
 
         <IonTabButton>
