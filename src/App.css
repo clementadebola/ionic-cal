@@ -4,6 +4,8 @@ ion-fab{
 
   ion-fab-button{
     --box-shadow: none;
+    width: 60px;
+    height: 60px;
 
   }
 }
@@ -12,7 +14,7 @@ ion-tab-bar {
   bottom: 20px;
   position: relative;
   border-radius: 16px;
-  width: 92%;
+  width: 80%;
   margin: 0 auto;
   background-color: #090B22;
   overflow: visible;
